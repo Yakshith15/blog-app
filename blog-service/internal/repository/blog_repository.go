@@ -125,3 +125,32 @@ func (r *BlogRepository) UpdateBlog(
 
 	return blog, err
 }
+
+func (r *BlogRepository) DeleteBlog(
+	id uuid.UUID,
+	authorID uuid.UUID,
+) error {
+
+	query := `
+		DELETE FROM blogs
+		WHERE id = $1
+		  AND author_id = $2
+	`
+
+	result, err := r.db.Exec(query, id, authorID)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return sql.ErrNoRows
+	}
+
+	return nil
+}
+

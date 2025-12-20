@@ -56,8 +56,16 @@ func (s *BlogService) UpdateBlog(
 	if err == sql.ErrNoRows {
 		return model.Blog{}, errors.New("not owner or blog not found")
 	}
-	if err != nil {
-		return model.Blog{}, err
+	return blog, err
+}
+
+func (s *BlogService) DeleteBlog(
+	blogID uuid.UUID,
+	requesterID uuid.UUID,
+) error {
+	err := s.repo.DeleteBlog(blogID, requesterID)
+	if err == sql.ErrNoRows {
+		return errors.New("not owner or blog not found")
 	}
-	return blog, nil
+	return err
 }

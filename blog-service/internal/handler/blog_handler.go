@@ -18,14 +18,53 @@ func NewBlogHandler(service *service.BlogService) *BlogHandler {
 	return &BlogHandler{service: service}
 }
 
-func (h *BlogHandler) GetBlogs(c *gin.Context) {
 
+func abortWithError(c *gin.Context, statusCode int, errorCode, message string) {
+	c.AbortWithStatusJSON(statusCode, gin.H{
+		"error":   errorCode,
+		"message": message,
+	})
+}
+
+func getAuthContext(c *gin.Context) (model.AuthContext, bool) {
+	authCtx, exists := c.Get("auth")
+	if !exists {
+		abortWithError(c, http.StatusUnauthorized, "UNAUTHORIZED", "Authentication required")
+		return model.AuthContext{}, false
+	}
+	return authCtx.(model.AuthContext), true
+}
+
+func validateEmailVerification(c *gin.Context, auth model.AuthContext, action string) bool {
+	if !auth.EmailVerified {
+		abortWithError(c, http.StatusForbidden, "EMAIL_NOT_VERIFIED",
+			"Email verification required to "+action+" blogs")
+		return false
+	}
+	return true
+}
+
+func parseUUIDParam(c *gin.Context, paramName string) (uuid.UUID, bool) {
+	id, err := uuid.Parse(c.Param(paramName))
+	if err != nil {
+		abortWithError(c, http.StatusBadRequest, "INVALID_ID", "Invalid blog ID")
+		return uuid.Nil, false
+	}
+	return id, true
+}
+
+func bindJSON(c *gin.Context, req interface{}) bool {
+	if err := c.ShouldBindJSON(req); err != nil {
+		abortWithError(c, http.StatusBadRequest, "BAD_REQUEST", "Invalid request body")
+		return false
+	}
+	return true
+}
+
+func (h *BlogHandler) GetBlogs(c *gin.Context) {
 	blogs, err := h.service.FindAll()
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-			"error":   "INTERNAL_ERROR",
-			"message": "Failed to fetch blogs",
-		})
+		abortWithError(c, http.StatusInternalServerError, "INTERNAL_ERROR", "Failed to fetch blogs")
 		return
 	}
 
@@ -33,22 +72,14 @@ func (h *BlogHandler) GetBlogs(c *gin.Context) {
 }
 
 func (h *BlogHandler) GetBlogByID(c *gin.Context) {
-
-	blogID, err := uuid.Parse(c.Param("id"))
-	if err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"error":   "INVALID_ID",
-			"message": "Invalid blog ID",
-		})
+	blogID, ok := parseUUIDParam(c, "id")
+	if !ok {
 		return
 	}
 
 	blog, err := h.service.GetByID(blogID)
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{
-			"error":   "NOT_FOUND",
-			"message": "Blog not found",
-		})
+		abortWithError(c, http.StatusNotFound, "NOT_FOUND", "Blog not found")
 		return
 	}
 
@@ -56,32 +87,17 @@ func (h *BlogHandler) GetBlogByID(c *gin.Context) {
 }
 
 func (h *BlogHandler) CreateBlog(c *gin.Context) {
-
-	authCtx, exists := c.Get("auth")
-	if !exists {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-			"error":   "UNAUTHORIZED",
-			"message": "Authentication required",
-		})
+	auth, ok := getAuthContext(c)
+	if !ok {
 		return
 	}
 
-	auth := authCtx.(model.AuthContext)
-
-	if !auth.EmailVerified {
-		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
-			"error":   "EMAIL_NOT_VERIFIED",
-			"message": "Email verification required to create blogs",
-		})
+	if !validateEmailVerification(c, auth, "create") {
 		return
 	}
 
 	var req model.CreateBlogRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"error":   "BAD_REQUEST",
-			"message": "Invalid request body",
-		})
+	if !bindJSON(c, &req) {
 		return
 	}
 
@@ -91,53 +107,30 @@ func (h *BlogHandler) CreateBlog(c *gin.Context) {
 		req.Content,
 	)
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-			"error":   "INTERNAL_ERROR",
-			"message": "Failed to create blog",
-		})
+		abortWithError(c, http.StatusInternalServerError, "INTERNAL_ERROR", "Failed to create blog")
 		return
 	}
 
 	c.JSON(http.StatusCreated, blog)
 }
 
-
 func (h *BlogHandler) UpdateBlog(c *gin.Context) {
-
-	authCtx, exists := c.Get("auth")
-	if !exists {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-			"error":   "UNAUTHORIZED",
-			"message": "Authentication required",
-		})
+	auth, ok := getAuthContext(c)
+	if !ok {
 		return
 	}
 
-	auth := authCtx.(model.AuthContext)
-
-	if !auth.EmailVerified {
-		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
-			"error":   "EMAIL_NOT_VERIFIED",
-			"message": "Email verification required to update blogs",
-		})
+	if !validateEmailVerification(c, auth, "update") {
 		return
 	}
 
-	blogID, err := uuid.Parse(c.Param("id"))
-	if err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"error":   "INVALID_ID",
-			"message": "Invalid blog ID",
-		})
+	blogID, ok := parseUUIDParam(c, "id")
+	if !ok {
 		return
 	}
 
 	var req model.UpdateBlogRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"error":   "BAD_REQUEST",
-			"message": "Invalid request body",
-		})
+	if !bindJSON(c, &req) {
 		return
 	}
 
@@ -148,12 +141,33 @@ func (h *BlogHandler) UpdateBlog(c *gin.Context) {
 		req.Content,
 	)
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
-			"error":   "FORBIDDEN",
-			"message": err.Error(),
-		})
+		abortWithError(c, http.StatusForbidden, "FORBIDDEN", err.Error())
 		return
 	}
 
 	c.JSON(http.StatusOK, updatedBlog)
+}
+
+func (h *BlogHandler) DeleteBlog(c *gin.Context) {
+	auth, ok := getAuthContext(c)
+	if !ok {
+		return
+	}
+
+	if !validateEmailVerification(c, auth, "delete") {
+		return
+	}
+
+	blogID, ok := parseUUIDParam(c, "id")
+	if !ok {
+		return
+	}
+
+	err := h.service.DeleteBlog(blogID, auth.UserID)
+	if err != nil {
+		abortWithError(c, http.StatusForbidden, "FORBIDDEN", err.Error())
+		return
+	}
+
+	c.Status(http.StatusNoContent)
 }

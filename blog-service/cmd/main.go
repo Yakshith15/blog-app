@@ -37,6 +37,7 @@ func main() {
 	router.GET("/blogs/:id", blogHandler.GetBlogByID)
 	router.POST("/blogs", blogHandler.CreateBlog)
 	router.PUT("/blogs/:id", blogHandler.UpdateBlog)
+	router.DELETE("/blogs/:id", blogHandler.DeleteBlog)
 
 	log.Println("Starting Blog Service on port", port)
 	err := router.Run(":" + port)
