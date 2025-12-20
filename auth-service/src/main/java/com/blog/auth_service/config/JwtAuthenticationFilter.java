@@ -1,5 +1,6 @@
 package com.blog.auth_service.config;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -39,11 +40,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token = authHeader.substring(7);
 
         try {
-            UUID userId = jwtUtil.extractUserId(token);
+            Claims claims = jwtUtil.validateToken(token);
+
+            UUID userId = UUID.fromString(claims.getSubject());
+            boolean emailVerified =
+                    claims.get("emailVerified", Boolean.class);
+
+            AuthPrincipal principal =
+                    new AuthPrincipal(userId, emailVerified);
 
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(
-                            userId,
+                            principal,
                             null,
                             List.of()
                     );
@@ -52,10 +60,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     new WebAuthenticationDetailsSource().buildDetails(request)
             );
 
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+            SecurityContextHolder
+                    .getContext()
+                    .setAuthentication(authentication);
 
         } catch (JwtException ex) {
-            // Invalid or expired token → ignore & continue
             SecurityContextHolder.clearContext();
         }
 

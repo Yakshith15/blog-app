@@ -4,6 +4,7 @@ import com.blog.auth_service.dto.AuthResponse;
 import com.blog.auth_service.dto.LoginRequest;
 import com.blog.auth_service.dto.RegisterRequest;
 import com.blog.auth_service.service.AuthService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,7 +24,7 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> register(
-            @RequestBody RegisterRequest request
+            @Valid @RequestBody RegisterRequest request
     ) {
         UUID userId = authService.register(request);
         return ResponseEntity
@@ -33,7 +34,7 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(
-            @RequestBody LoginRequest request
+            @Valid @RequestBody LoginRequest request
     ) {
         return ResponseEntity.ok(authService.login(request));
     }
