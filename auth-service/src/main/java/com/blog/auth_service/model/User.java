@@ -24,6 +24,10 @@ public class User {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
+    @Column(name = "email_verified", nullable = false)
+    private boolean emailVerified;
+
+
     protected User() {
         // JPA only
     }
@@ -34,6 +38,7 @@ public class User {
         this.username = username;
         this.passwordHash = passwordHash;
         this.createdAt = Instant.now();
+        this.emailVerified = false;
     }
 
     public UUID getId() {
@@ -55,5 +60,7 @@ public class User {
     public Instant getCreatedAt() {
         return createdAt;
     }
+
+    public boolean isEmailVerified() {return emailVerified;}
 }
 

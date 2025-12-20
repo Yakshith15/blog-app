@@ -20,12 +20,13 @@ public class JwtUtil {
         this.expirationMillis = expirationMillis;
     }
 
-    public String generateToken(UUID userId, String email) {
+    public String generateToken(UUID userId, String email,boolean emailVerified) {
         Instant now = Instant.now();
 
         return Jwts.builder()
                 .setSubject(userId.toString())
                 .claim("email", email)
+                .claim("emailVerified", emailVerified)
                 .setIssuedAt(Date.from(now))
                 .setExpiration(Date.from(now.plusMillis(expirationMillis)))
                 .signWith(signingKey, SignatureAlgorithm.HS256)
