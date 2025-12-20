@@ -7,6 +7,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/Yakshith15/blog-app/blog-service/internal/handler"
 	"github.com/Yakshith15/blog-app/blog-service/internal/middleware"
+	"github.com/Yakshith15/blog-app/blog-service/internal/config"
+	"github.com/Yakshith15/blog-app/blog-service/internal/repository"
+	"github.com/Yakshith15/blog-app/blog-service/internal/service"
 )
 
 func main() {
@@ -24,11 +27,16 @@ func main() {
 		c.JSON(http.StatusOK, gin.H{"message": "OK"})
 	})
 
-	blogHandler := handler.NewBlogHandler()
+	db := config.NewDB()
 
+	blogRepo := repository.NewBlogRepository(db)
+	blogService := service.NewBlogService(blogRepo)
+	blogHandler := handler.NewBlogHandler(blogService)
+	
 	router.GET("/blogs", blogHandler.GetBlogs)
 	router.GET("/blogs/:id", blogHandler.GetBlogByID)
-
+	router.POST("/blogs", blogHandler.CreateBlog)
+	router.PUT("/blogs/:id", blogHandler.UpdateBlog)
 
 	log.Println("Starting Blog Service on port", port)
 	err := router.Run(":" + port)
