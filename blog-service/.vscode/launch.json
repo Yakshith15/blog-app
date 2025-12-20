@@ -1,0 +1,17 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "Run Blog Service",
+        "type": "go",
+        "request": "launch",
+        "mode": "auto",
+        "program": "${workspaceFolder}/cmd",
+        "env": {
+          "PORT": "8082",
+          "JWT_SECRET": "super-long-random-secret-key-at-least-32-chars"
+        }
+      }
+    ]
+  }
+  
