@@ -15,7 +15,7 @@ func NewCommentRepository(db *sql.DB) *CommentRepository {
 	return &CommentRepository{db: db}
 }
 
-func (r *CommentRepository) Create(comment *model.Comment) error {
+func (r *CommentRepository) Create(comment model.Comment) error {
 	query := `
 		INSERT INTO comments (id, blogId, authorId, content, createdAt, updatedAt)
 		VALUES ($1, $2, $3, $4, $5, $6)
@@ -86,7 +86,7 @@ func (r *CommentRepository) GetCommentByID(id uuid.UUID) (*model.Comment, error)
 	return &comment, nil
 }
 
-func (r *CommentRepository) Update(comment *model.Comment) error {
+func (r *CommentRepository) Update(comment model.Comment) error {
 	query := `
 		UPDATE comments
 		SET content = $1, updatedAt = $2
