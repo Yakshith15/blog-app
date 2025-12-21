@@ -21,8 +21,7 @@ func main() {
 
 	router := gin.Default()
 
-	router.Use(middleware.JWTAuthMiddleware())
-	
+	// Public (no auth)
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "OK"})
 	})
@@ -31,17 +30,28 @@ func main() {
 
 	blogRepo := repository.NewBlogRepository(db)
 	blogService := service.NewBlogService(blogRepo)
+
 	blogHandler := handler.NewBlogHandler(blogService)
-	
-	router.GET("/blogs", blogHandler.GetBlogs)
-	router.GET("/blogs/:id", blogHandler.GetBlogByID)
-	router.POST("/blogs", blogHandler.CreateBlog)
-	router.PUT("/blogs/:id", blogHandler.UpdateBlog)
-	router.DELETE("/blogs/:id", blogHandler.DeleteBlog)
+	internalBlogHandler := handler.NewInternalBlogHandler(blogService)
+
+	// Public API (user JWT)
+	api := router.Group("/")
+	api.Use(middleware.JWTAuthMiddleware())
+	{
+		api.GET("/blogs", blogHandler.GetBlogs)
+		api.GET("/blogs/:id", blogHandler.GetBlogByID)
+		api.POST("/blogs", blogHandler.CreateBlog)
+		api.PUT("/blogs/:id", blogHandler.UpdateBlog)
+		api.DELETE("/blogs/:id", blogHandler.DeleteBlog)
+	}
+
+	// Internal API (service-to-service)
+	internal := router.Group("/internal")
+	internal.Use(middleware.InternalAuthMiddleware())
+	{
+		internal.GET("/blogs/:id", internalBlogHandler.CheckBlogExists)
+	}
 
 	log.Println("Starting Blog Service on port", port)
-	err := router.Run(":" + port)
-	if err != nil {
-		log.Fatal("Failed to start server:", err)
-	}
+	log.Fatal(router.Run(":" + port))
 }
