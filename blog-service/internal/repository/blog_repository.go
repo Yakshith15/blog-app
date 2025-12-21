@@ -154,3 +154,26 @@ func (r *BlogRepository) DeleteBlog(
 	return nil
 }
 
+func (r *BlogRepository) ExistsByID(id uuid.UUID) (bool, error) {
+
+	query := `
+		SELECT 1
+		FROM blogs
+		WHERE id = $1
+		LIMIT 1
+	`
+
+	var dummy int
+	err := r.db.QueryRow(query, id).Scan(&dummy)
+
+	if err == sql.ErrNoRows {
+		return false, nil
+	}
+
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
