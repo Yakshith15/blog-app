@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 
 	"github.com/Yakshith15/blog-app/comment-service/internal/client"
 	"github.com/Yakshith15/blog-app/comment-service/internal/config"
@@ -21,6 +22,11 @@ func main() {
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8083"
+	}
+
+	err := godotenv.Load()
+	if err != nil {
+		log.Println("No .env file found, relying on environment variables")
 	}
 
 	blogServiceURL := os.Getenv("BLOG_SERVICE_URL")
