@@ -2,7 +2,7 @@ package handler
 
 import (
 	"net/http"
-
+	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
@@ -89,19 +89,24 @@ func (h *CommentHandler) CreateComment(c *gin.Context) {
 		return
 	}
 
-	comment, err := h.service.CreateComment(
-		blogID,
-		auth.UserID,
-		req.Content,
-	)
-	
+	comment, err := h.service.CreateComment(blogID, auth.UserID, req.Content)
 	if err != nil {
+
+		if errors.Is(err, service.ErrBlogNotFound) {
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{
+				"error":   "BLOG_NOT_FOUND",
+				"message": "Blog does not exist",
+			})
+			return
+		}
+
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 			"error":   "INTERNAL_ERROR",
 			"message": "Failed to create comment",
 		})
 		return
-	}
+}
+
 
 	c.JSON(http.StatusCreated, comment)
 }
