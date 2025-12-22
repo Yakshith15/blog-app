@@ -22,6 +22,6 @@ func NewDB() *sql.DB {
 	if err := db.Ping(); err != nil {
 		log.Fatal("failed to connect to database:", err)
 	}
-
+	log.Println("connected to database")
 	return db
 }
