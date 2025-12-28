@@ -5,13 +5,19 @@ spring:
   application:
     name: api-gateway
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+
   cloud:
     gateway:
       routes:
 
         # -------- Auth Service --------
         - id: auth-service
-          uri: http://localhost:8083
+          uri: http://localhost:8081
           predicates:
             - Path=/api/auth/**
           filters:
@@ -19,7 +25,7 @@ spring:
 
         # -------- Blog Service --------
         - id: blog-service
-          uri: http://localhost:8081
+          uri: http://localhost:8082
           predicates:
             - Path=/api/blog/**
           filters:
@@ -27,7 +33,7 @@ spring:
 
         # -------- Comment Service --------
         - id: comment-service
-          uri: http://localhost:8082
+          uri: http://localhost:8083
           predicates:
             - Path=/api/comments/**
           filters:
