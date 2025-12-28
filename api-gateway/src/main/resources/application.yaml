@@ -1,0 +1,34 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      routes:
+
+        # -------- Auth Service --------
+        - id: auth-service
+          uri: http://localhost:8083
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - RewritePath=/api/auth/(?<segment>.*), /${segment}
+
+        # -------- Blog Service --------
+        - id: blog-service
+          uri: http://localhost:8081
+          predicates:
+            - Path=/api/blog/**
+          filters:
+            - RewritePath=/api/blog/(?<segment>.*), /${segment}
+
+        # -------- Comment Service --------
+        - id: comment-service
+          uri: http://localhost:8082
+          predicates:
+            - Path=/api/comments/**
+          filters:
+            - RewritePath=/api/comments/(?<segment>.*), /${segment}
