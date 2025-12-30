@@ -1,9 +1,8 @@
 server:
   port: 8080
 
-spring:
-  application:
-    name: api-gateway
+jwt:
+  secret: ${JWT_SECRET}
 
 management:
   endpoints:
@@ -11,10 +10,19 @@ management:
       exposure:
         include: health
 
+spring:
+  application:
+    name: api-gateway
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.security.reactive.ReactiveSecurityAutoConfiguration
+      - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
+      - org.springframework.boot.autoconfigure.security.oauth2.resource.reactive.ReactiveOAuth2ResourceServerAutoConfiguration
+
+
   cloud:
     gateway:
       routes:
-
         # -------- Auth Service --------
         - id: auth-service
           uri: http://localhost:8081

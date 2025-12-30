@@ -9,8 +9,7 @@ public class JwtConfig {
     @Bean
     public JwtUtil jwtUtil(JwtProperties jwtProperties) {
         return new JwtUtil(
-                jwtProperties.getSecret(),
-                jwtProperties.getExpiration()
+                jwtProperties.getSecret()
         );
     }
 }

@@ -28,6 +28,7 @@ public class GlobalErrorHandler implements ErrorWebExceptionHandler {
         String requestId = exchange.getRequest()
                 .getHeaders()
                 .getFirst("X-Request-Id");
+        System.out.println("Gateway error"+ ex);
 
         Map<String, Object> errorResponse = new HashMap<>();
         errorResponse.put("timestamp", Instant.now().toString());
