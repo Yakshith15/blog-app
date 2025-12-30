@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -17,7 +18,6 @@ type BlogHandler struct {
 func NewBlogHandler(service *service.BlogService) *BlogHandler {
 	return &BlogHandler{service: service}
 }
-
 
 func abortWithError(c *gin.Context, statusCode int, errorCode, message string) {
 	c.AbortWithStatusJSON(statusCode, gin.H{
@@ -100,7 +100,7 @@ func (h *BlogHandler) CreateBlog(c *gin.Context) {
 	if !bindJSON(c, &req) {
 		return
 	}
-
+	log.Println("Creating blog for user", auth.UserID)
 	blog, err := h.service.CreateBlog(
 		auth.UserID,
 		req.Title,

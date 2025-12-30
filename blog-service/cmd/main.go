@@ -2,17 +2,23 @@ package main
 
 import (
 	"log"
-	"os"
 	"net/http"
-	"github.com/gin-gonic/gin"
+	"os"
+
+	"github.com/Yakshith15/blog-app/blog-service/internal/config"
 	"github.com/Yakshith15/blog-app/blog-service/internal/handler"
 	"github.com/Yakshith15/blog-app/blog-service/internal/middleware"
-	"github.com/Yakshith15/blog-app/blog-service/internal/config"
 	"github.com/Yakshith15/blog-app/blog-service/internal/repository"
 	"github.com/Yakshith15/blog-app/blog-service/internal/service"
+	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	// Load .env file
+	if err := godotenv.Load(); err != nil {
+		log.Println("No .env file found or error loading .env file")
+	}
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -34,7 +40,6 @@ func main() {
 	blogHandler := handler.NewBlogHandler(blogService)
 	internalBlogHandler := handler.NewInternalBlogHandler(blogService)
 
-	// Public API (user JWT)
 	api := router.Group("/")
 	api.Use(middleware.JWTAuthMiddleware())
 	{
@@ -45,7 +50,6 @@ func main() {
 		api.DELETE("/blogs/:id", blogHandler.DeleteBlog)
 	}
 
-	// Internal API (service-to-service)
 	internal := router.Group("/internal")
 	internal.Use(middleware.InternalAuthMiddleware())
 	{

@@ -2,15 +2,15 @@
     "version": "0.2.0",
     "configurations": [
       {
-        "name": "Run Blog Service",
+        "name": "Debug Blog Service",
         "type": "go",
         "request": "launch",
-        "mode": "auto",
+        "mode": "debug",
         "program": "${workspaceFolder}/cmd",
         "env": {
-          "PORT": "8082",
-          "JWT_SECRET": "super-long-random-secret-key-at-least-32-chars"
-        }
+          "PORT": "8082"
+        },
+        "showLog": true
       }
     ]
   }
