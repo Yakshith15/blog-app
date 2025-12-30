@@ -14,7 +14,7 @@ public class JwtUtil {
 
     private final Key signingKey;
 
-    public JwtUtil(String secret, long expirationMillis) {
+    public JwtUtil(String secret) {
         this.signingKey = Keys.hmacShaKeyFor(secret.getBytes());
     }
 
@@ -24,14 +24,6 @@ public class JwtUtil {
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
-    }
-
-    public UUID extractUserId(String token) {
-        return UUID.fromString(validateToken(token).getSubject());
-    }
-
-    public String extractEmail(String token) {
-        return validateToken(token).get("email", String.class);
     }
 }
 

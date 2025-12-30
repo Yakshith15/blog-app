@@ -2,6 +2,7 @@ package com.blog.api_gateway.security;
 
 import io.jsonwebtoken.Claims;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
+import org.springframework.cloud.gateway.support.ServerWebExchangeUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
@@ -9,15 +10,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
+import java.net.URI;
+import java.util.Set;
 
 @Configuration
 public class JwtAuthenticationFilter {
-
-    private static final List<String> PUBLIC_PATHS = List.of(
-            "/api/auth",
-            "/actuator/health"
-    );
 
     private final JwtUtil jwtUtil;
 
@@ -29,9 +26,8 @@ public class JwtAuthenticationFilter {
     public GlobalFilter jwtFilter() {
         return (exchange, chain) -> {
 
-            String path = exchange.getRequest().getURI().getPath();
-
-            if (isPublicPath(path)) {
+            // ✅ ALWAYS use original request path (before RewritePath)
+            if (isPublicPath(exchange)) {
                 return chain.filter(exchange);
             }
 
@@ -51,8 +47,8 @@ public class JwtAuthenticationFilter {
                 ServerWebExchange mutatedExchange = exchange.mutate()
                         .request(r -> r
                                 .header("X-User-Id", claims.getSubject())
-                                .header("userId",claims.getSubject())
-                                .header("emailVerified", claims.get("emailVerified").toString())
+                                .header("X-Email-Verified",
+                                        String.valueOf(claims.get("emailVerified")))
                         )
                         .build();
 
@@ -64,8 +60,26 @@ public class JwtAuthenticationFilter {
         };
     }
 
-    private boolean isPublicPath(String path) {
-        return PUBLIC_PATHS.stream().anyMatch(path::startsWith);
+    /**
+     * Check PUBLIC routes using ORIGINAL request path
+     * (before gateway rewrites it)
+     */
+    private boolean isPublicPath(ServerWebExchange exchange) {
+
+        Set<URI> originalUris =
+                exchange.getAttribute(
+                        ServerWebExchangeUtils.GATEWAY_ORIGINAL_REQUEST_URL_ATTR
+                );
+
+        if (originalUris == null || originalUris.isEmpty()) {
+            return false;
+        }
+
+        String originalPath = originalUris.iterator().next().getPath();
+
+        return originalPath.equals("/api/auth")
+                || originalPath.startsWith("/api/auth/")
+                || originalPath.equals("/actuator/health");
     }
 
     private Mono<Void> unauthorized(ServerWebExchange exchange) {
@@ -73,4 +87,3 @@ public class JwtAuthenticationFilter {
         return exchange.getResponse().setComplete();
     }
 }
-
