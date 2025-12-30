@@ -1,14 +1,15 @@
 package middleware
 
 import (
+	"errors"
 	"net/http"
 	"os"
 	"strings"
 
+	"github.com/Yakshith15/blog-app/blog-service/internal/model"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
-	"github.com/Yakshith15/blog-app/blog-service/internal/model"
 )
 
 func JWTAuthMiddleware() gin.HandlerFunc {
@@ -16,6 +17,8 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 	if secret == "" {
 		panic("JWT_SECRET is not set")
 	}
+
+	secretBytes := []byte(secret)
 
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
@@ -31,17 +34,38 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 
 		token, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
-			// Ensure token algorithm is what we expect
 			if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, jwt.ErrSignatureInvalid
 			}
-			return []byte(secret), nil
-		})
+			return secretBytes, nil
+		}, jwt.WithValidMethods([]string{"HS256"}))
 
-		if err != nil || !token.Valid {
+		if err != nil {
+			if errors.Is(err, jwt.ErrTokenExpired) {
+				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+					"error":   "TOKEN_EXPIRED",
+					"message": "Token has expired",
+				})
+				return
+			}
+			if errors.Is(err, jwt.ErrSignatureInvalid) {
+				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+					"error":   "INVALID_TOKEN",
+					"message": "Token signature is invalid",
+				})
+				return
+			}
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
 				"error":   "INVALID_TOKEN",
 				"message": "Token is invalid or expired",
+			})
+			return
+		}
+
+		if !token.Valid {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+				"error":   "INVALID_TOKEN",
+				"message": "Token is invalid",
 			})
 			return
 		}
@@ -55,7 +79,6 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		// Extract userId
 		sub, ok := claims["sub"].(string)
 		if !ok {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
@@ -74,14 +97,11 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		// Extract emailVerified
 		emailVerified, ok := claims["emailVerified"].(bool)
 		if !ok {
-			// default to false if missing (safe)
 			emailVerified = false
 		}
 
-		// Store auth context
 		c.Set("auth", model.AuthContext{
 			UserID:        userID,
 			EmailVerified: emailVerified,

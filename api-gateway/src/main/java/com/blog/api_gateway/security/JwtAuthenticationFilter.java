@@ -11,10 +11,16 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 import java.net.URI;
+import java.util.List;
 import java.util.Set;
 
 @Configuration
 public class JwtAuthenticationFilter {
+
+    private static final List<String> PUBLIC_PATHS = List.of(
+            "/api/auth",
+            "/actuator/health"
+    );
 
     private final JwtUtil jwtUtil;
 
@@ -26,7 +32,6 @@ public class JwtAuthenticationFilter {
     public GlobalFilter jwtFilter() {
         return (exchange, chain) -> {
 
-            // ✅ ALWAYS use original request path (before RewritePath)
             if (isPublicPath(exchange)) {
                 return chain.filter(exchange);
             }
@@ -46,9 +51,8 @@ public class JwtAuthenticationFilter {
 
                 ServerWebExchange mutatedExchange = exchange.mutate()
                         .request(r -> r
-                                .header("X-User-Id", claims.getSubject())
-                                .header("X-Email-Verified",
-                                        String.valueOf(claims.get("emailVerified")))
+                                .header("userId",claims.getSubject())
+                                .header("emailVerified", claims.get("emailVerified").toString())
                         )
                         .build();
 

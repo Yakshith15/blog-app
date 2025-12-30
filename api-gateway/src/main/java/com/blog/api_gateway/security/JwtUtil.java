@@ -2,13 +2,9 @@ package com.blog.api_gateway.security;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 
 import java.security.Key;
-import java.time.Instant;
-import java.util.Date;
-import java.util.UUID;
 
 public class JwtUtil {
 
