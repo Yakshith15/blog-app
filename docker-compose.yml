@@ -1,6 +1,7 @@
 version: "3.9"
 
 services:
+
   api-gateway:
     build: ./api-gateway
     container_name: api-gateway
@@ -8,6 +9,19 @@ services:
       - "8080:8080"
     env_file:
       - ./api-gateway/.env
+    depends_on:
+      auth-service:
+        condition: service_healthy
+      blog-service:
+        condition: service_healthy
+      comment-service:
+        condition: service_healthy
+    # healthcheck:
+    #   test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+    #   interval: 10s
+    #   timeout: 3s
+    #   retries: 5
+    #   start_period: 20s
 
   auth-service:
     build: ./auth-service
@@ -16,6 +30,12 @@ services:
       - "8081:8081"
     env_file:
       - ./auth-service/.env
+    # healthcheck:
+    #   test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
+    #   interval: 10s
+    #   timeout: 3s
+    #   retries: 5
+    #   start_period: 20s
 
   blog-service:
     build: ./blog-service
@@ -25,7 +45,14 @@ services:
     env_file:
       - ./blog-service/.env
     depends_on:
-      - auth-service
+      auth-service:
+        condition: service_healthy
+    # healthcheck:
+    #   test: ["CMD", "curl", "-f", "http://localhost:8082/health"]
+    #   interval: 10s
+    #   timeout: 3s
+    #   retries: 5
+    #   start_period: 20s
 
   comment-service:
     build: ./comment-service
@@ -35,4 +62,11 @@ services:
     env_file:
       - ./comment-service/.env
     depends_on:
-      - blog-service
+      blog-service:
+        condition: service_healthy
+    # healthcheck:
+    #   test: ["CMD", "curl", "-f", "http://localhost:8083/health"]
+    #   interval: 10s
+    #   timeout: 3s
+    #   retries: 5
+    #   start_period: 20s
