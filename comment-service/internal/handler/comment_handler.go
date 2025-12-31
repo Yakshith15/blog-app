@@ -1,8 +1,9 @@
 package handler
 
 import (
-	"net/http"
 	"errors"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
@@ -18,9 +19,7 @@ func NewCommentHandler(service *service.CommentService) *CommentHandler {
 	return &CommentHandler{service: service}
 }
 
-//
 // GET /blogs/:blogId/comments
-//
 func (h *CommentHandler) GetComments(c *gin.Context) {
 
 	blogID, err := uuid.Parse(c.Param("blogId"))
@@ -44,9 +43,7 @@ func (h *CommentHandler) GetComments(c *gin.Context) {
 	c.JSON(http.StatusOK, comments)
 }
 
-//
 // POST /blogs/:blogId/comments
-//
 func (h *CommentHandler) CreateComment(c *gin.Context) {
 
 	// ---- Auth context ----
@@ -105,15 +102,12 @@ func (h *CommentHandler) CreateComment(c *gin.Context) {
 			"message": "Failed to create comment",
 		})
 		return
-}
-
+	}
 
 	c.JSON(http.StatusCreated, comment)
 }
 
-//
 // DELETE /comments/:id
-//
 func (h *CommentHandler) DeleteComment(c *gin.Context) {
 
 	// ---- Auth context ----
