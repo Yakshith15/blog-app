@@ -38,7 +38,7 @@ public class User {
         this.username = username;
         this.passwordHash = passwordHash;
         this.createdAt = Instant.now();
-        this.emailVerified = false;
+        this.emailVerified = true;
     }
 
     public UUID getId() {

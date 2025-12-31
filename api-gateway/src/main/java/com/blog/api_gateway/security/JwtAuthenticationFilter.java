@@ -11,16 +11,10 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 import java.net.URI;
-import java.util.List;
 import java.util.Set;
 
 @Configuration
 public class JwtAuthenticationFilter {
-
-    private static final List<String> PUBLIC_PATHS = List.of(
-            "/api/auth",
-            "/actuator/health"
-    );
 
     private final JwtUtil jwtUtil;
 
@@ -64,10 +58,6 @@ public class JwtAuthenticationFilter {
         };
     }
 
-    /**
-     * Check PUBLIC routes using ORIGINAL request path
-     * (before gateway rewrites it)
-     */
     private boolean isPublicPath(ServerWebExchange exchange) {
 
         Set<URI> originalUris =

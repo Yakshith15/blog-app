@@ -3,8 +3,8 @@ package repository
 import (
 	"database/sql"
 
-	"github.com/google/uuid"
 	"github.com/Yakshith15/blog-app/comment-service/internal/model"
+	"github.com/google/uuid"
 )
 
 type CommentRepository struct {

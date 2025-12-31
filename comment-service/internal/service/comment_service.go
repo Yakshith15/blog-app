@@ -3,6 +3,7 @@ package service
 import (
 	"database/sql"
 	"errors"
+	"log"
 	"time"
 
 	"github.com/google/uuid"
@@ -37,9 +38,11 @@ func (s *CommentService) CreateComment(
 
 	exists, err := s.blogClient.BlogExists(blogID)
 	if err != nil {
+		log.Printf("Error checking if blog exists (blogID: %s): %v", blogID, err)
 		return model.Comment{}, err
 	}
 	if !exists {
+		log.Printf("Blog not found (blogID: %s)", blogID)
 		return model.Comment{}, ErrBlogNotFound
 	}
 
@@ -53,6 +56,7 @@ func (s *CommentService) CreateComment(
 	}
 
 	if err := s.commentRepository.Create(comment); err != nil {
+		log.Printf("Error creating comment in database (blogID: %s, authorID: %s): %v", blogID, authorID, err)
 		return model.Comment{}, err
 	}
 

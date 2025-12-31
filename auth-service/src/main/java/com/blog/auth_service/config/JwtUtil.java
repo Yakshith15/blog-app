@@ -44,8 +44,4 @@ public class JwtUtil {
     public UUID extractUserId(String token) {
         return UUID.fromString(validateToken(token).getSubject());
     }
-
-    public String extractEmail(String token) {
-        return validateToken(token).get("email", String.class);
-    }
 }

@@ -26,6 +26,7 @@ go.work
 .env
 .env.local
 .env.*.local
+.env.*
 
 # IDE - VSCode
 .vscode/*

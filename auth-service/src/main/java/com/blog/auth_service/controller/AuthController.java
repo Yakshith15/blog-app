@@ -49,4 +49,9 @@ public class AuthController {
                 Map.of("userId", userId)
         );
     }
+
+    @GetMapping("/health")
+    public ResponseEntity<?> health() {
+        return ResponseEntity.ok(Map.of("status", HttpStatus.OK));
+    }
 }
