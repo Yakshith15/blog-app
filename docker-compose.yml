@@ -1,6 +1,13 @@
 version: "3.9"
 
 services:
+  api-gateway:
+    build: ./api-gateway
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    env_file:
+      - ./api-gateway/.env
 
   auth-service:
     build: ./auth-service
